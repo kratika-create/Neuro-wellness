@@ -1,7 +1,7 @@
+opencv-python-headless
 streamlit
 numpy
 mediapipe
-opencv-python-headless
 streamlit-webrtc
 av
 librosa
