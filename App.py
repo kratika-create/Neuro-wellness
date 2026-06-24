@@ -1,4 +1,22 @@
 import streamlit as st
+import sys
+
+# सुरक्षा कवच: OpenCV लोड करने से पहले चेक करें
+try:
+    import cv2
+except ImportError:
+    st.warning("सिस्टम फाइलें लोड हो रही हैं, कृपया 1 मिनट इंतज़ार करें...")
+    st.stop() # यह ऐप को तब तक रोक देगा जब तक cv2 रेडी न हो जाए
+
+# अब बाकी लाइब्रेरीज़ लोड करें
+import numpy as np
+import mediapipe as mp
+import librosa
+from streamlit_webrtc import webrtc_streamer
+
+st.set_page_config(layout="wide")
+st.title("🧠 Neuro-Wellness Diagnostic Suite")
+# ... बाकी आपका कोड यहाँ रहेगा ...import streamlit as st
 import numpy as np
 import cv2
 import mediapipe as mp
