@@ -1,4 +1,18 @@
 import os
+# यह कोड OpenCV को ग्राफिक्स ड्राइवर के बिना चलने के लिए मजबूर करेगा
+os.environ["OPENCV_VIDEOIO_PRIORITY_MSMF"] = "0"
+
+import streamlit as st
+try:
+    import cv2
+except ImportError:
+    st.error("OpenCV लाइब्रेरी लोड नहीं हो सकी। कृपया सुनिश्चित करें कि 'opencv-python-headless' आपके requirements.txt में है।")
+
+import mediapipe as mp
+import numpy as np
+from streamlit_webrtc import webrtc_streamer, VideoTransformerBase, RTCConfiguration
+
+# बाकी आपका ओरिजिनल कोड यहाँ से शुरू होगा...import os
 # यह लाइन OpenCV के ग्राफिक्स एरर को ब्लॉक करती है
 os.environ["QT_QPA_PLATFORM"] = "offscreen" 
 
