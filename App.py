@@ -1,62 +1,70 @@
 import streamlit as st
-import sys
-
-# सुरक्षा कवच: OpenCV लोड करने से पहले चेक करें
-try:
-    import cv2
-except ImportError:
-    st.warning("सिस्टम फाइलें लोड हो रही हैं, कृपया 1 मिनट इंतज़ार करें...")
-    st.stop() # यह ऐप को तब तक रोक देगा जब तक cv2 रेडी न हो जाए
-
-# अब बाकी लाइब्रेरीज़ लोड करें
-import numpy as np
-import mediapipe as mp
-import librosa
-from streamlit_webrtc import webrtc_streamer
-
-st.set_page_config(layout="wide")
-st.title("🧠 Neuro-Wellness Diagnostic Suite")
-# ... बाकी आपका कोड यहाँ रहेगा ...import streamlit as st
-import numpy as np
 import cv2
 import mediapipe as mp
-from streamlit_webrtc import webrtc_streamer # रियल-टाइम कैमरा के लिए
+import numpy as np
+from streamlit_webrtc import webrtc_streamer, VideoTransformerBase, RTCConfiguration
 
-st.set_page_config(layout="wide")
+# 1. पेज कॉन्फ़िगरेशन
+st.set_page_config(page_title="Neuro-Wellness AI", layout="wide")
+
+# 2. साइडबार में डिस्क्लेमर (कानूनी सुरक्षा)
+st.sidebar.title("⚠️ महत्वपूर्ण सूचना")
+st.sidebar.warning(
+    "डिस्क्लेमर: यह टूल केवल एक 'स्क्रीनिंग' (Screening) सहायता है। यह किसी पेशेवर चिकित्सा निदान (Diagnostic) का विकल्प नहीं है। "
+    "यदि आपको कोई लक्षण महसूस हो, तो कृपया तुरंत किसी योग्य डॉक्टर से परामर्श करें।"
+)
+
 st.title("🧠 Neuro-Wellness Diagnostic Suite")
+st.write("---")
 
-# टैपिंग टेस्ट लॉजिक
-with st.expander("1. Motor Skills: 10s Tapping Test"):
-    if 'taps' not in st.session_state: st.session_state.taps = 0
-    st.write("Click the button below rapidly for 10 seconds.")
-    if st.button("TAP HERE!"):
-        st.session_state.taps += 1
-    st.metric("Taps Count", st.session_state.taps)
+# 3. MediaPipe सेटअप (एडवांस मोड)
+mp_face_mesh = mp.solutions.face_mesh
+face_mesh = mp_face_mesh.FaceMesh(
+    max_num_faces=1,
+    refine_landmarks=True,
+    min_detection_confidence=0.5,
+    min_tracking_confidence=0.5
+)
+mp_drawing = mp.solutions.drawing_utils
 
-# वॉइस एनालिसिस के लिए ऑडियो रिकॉर्डर
-with st.expander("2. Vocal Biomarkers"):
-    audio_file = st.audio_input("Record your voice sample for analysis")
-    if audio_file:
-        st.write("Analyzing 40 frequency parameters...")
-        # यहाँ आप librosa के जरिए फीचर एक्सट्रैक्शन जोड़ेंगी
-        st.info("Analysis: Pitch stability 85% | Jitter index: Low")
+# 4. वीडियो प्रोसेसिंग क्लास (एडवांस फीचर्स के साथ)
+class FaceLandmarkTransformer(VideoTransformerBase):
+    def transform(self, frame):
+        img = frame.to_ndarray(format="bgr24")
+        
+        # इमेज प्रोसेसिंग
+        img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+        results = face_mesh.process(img_rgb)
+        
+        # लैंडमार्क्स ड्रा करना
+        if results.multi_face_landmarks:
+            for face_landmarks in results.multi_face_landmarks:
+                mp_drawing.draw_landmarks(
+                    image=img,
+                    landmark_list=face_landmarks,
+                    connections=mp_face_mesh.FACEMESH_TESSELATION,
+                    landmark_drawing_spec=mp_drawing.DrawingSpec(color=(0, 255, 0), thickness=1, circle_radius=1)
+                )
+        return img
 
-# फेशियल लैंडमार्क्स और एक्सप्रेशन
-with st.expander("3. Real-time Facial Analysis"):
-    img_file = st.camera_input("Camera for Landmark Detection")
-    if img_file:
-        st.write("Processing 468 MediaPipe Landmarks...")
-        # यहाँ हम सिम्युलेटेड रिपोर्ट दिखा रहे हैं
-        st.success("Expression Detected: Neutral")
-        st.write("Detailed Symmetry Report: Left-Right Deviation 2.4%")
+# 5. एडवांस वेबआरटीसी (WebRTC) कॉन्फ़िगरेशन
+RTC_CONFIGURATION = RTCConfiguration({"iceServers": [{"urls": ["stun:stun.l.google.com:19302"]}]})
 
-# फाइनल रिपोर्ट
-st.header("📊 Detailed Clinical Report")
-st.write("""
-### Analysis Summary:
-- **Motor Velocity:** 4.2 Taps/sec (Normal Range: >3.5)
-- **Vocal Stability:** Moderate Jitter (Requires follow-up)
-- **Facial Symmetry:** 94% (Within clinical bounds)
+# 6. कैमरा स्ट्रीमिंग (एडवांस फीचर्स के साथ)
+webrtc_streamer(
+    key="face-analysis",
+    video_transformer_factory=FaceLandmarkTransformer,
+    rtc_configuration=RTC_CONFIGURATION,
+    media_stream_constraints={"video": True, "audio": False},
+    async_transform=True, # यह ऐप को स्मूथ रखता है
+)
 
-**Clinical Conclusion:** Your current neuro-markers indicate **Low Risk**. However, vocal variations suggest a need for further assessment.
-""")
+# 7. एंडिंग और स्पष्टीकरण (जो आप चाहती थीं)
+st.write("---")
+st.subheader("टूल का उद्देश्य (Screening vs Diagnosis)")
+st.write(
+    "यह स्क्रीनिंग टूल न्यूरोलॉजिकल लक्षणों की शुरुआती पहचान में मदद करने के लिए डिज़ाइन किया गया है। "
+    "यह टूल केवल डेटा एकत्र करने और पैटर्न पहचानने में आपकी सहायता करता है। "
+    "अंतिम चिकित्सा निर्णय हमेशा एक पेशेवर डॉक्टर द्वारा ही लिए जाने चाहिए।"
+)
+st.success("धन्यवाद! इस टूल का उपयोग जिम्मेदारी से करें।")
