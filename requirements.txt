@@ -1,5 +1,7 @@
 streamlit
 numpy
-librosa
 mediapipe
 opencv-python-headless
+librosa
+streamlit-webrtc
+av
