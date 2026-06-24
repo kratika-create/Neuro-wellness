@@ -1,4 +1,10 @@
+import os
+# यह लाइन OpenCV के ग्राफिक्स एरर को ब्लॉक करती है
+os.environ["QT_QPA_PLATFORM"] = "offscreen" 
+
 import streamlit as st
+import cv2
+# ... बाकी कोड import streamlit as st
 import cv2
 import mediapipe as mp
 import numpy as np
