@@ -1,4 +1,11 @@
 import os
+os.environ["OPENCV_VIDEOIO_PRIORITY_MSMF"] = "0"
+os.environ["QT_QPA_PLATFORM"] = "offscreen"
+
+import streamlit as st
+import cv2
+import mediapipe as mp
+# ... (बाकी आपका पुराना कोड यहाँ से शुरू होगा)import os
 # यह कोड OpenCV को ग्राफिक्स ड्राइवर के बिना चलने के लिए मजबूर करेगा
 os.environ["OPENCV_VIDEOIO_PRIORITY_MSMF"] = "0"
 
