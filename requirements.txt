@@ -1,7 +1,7 @@
 streamlit
 numpy
-mediapipe
-opencv-python-headless
 librosa
+mediapipe
+opencv-python-headless==4.8.0.74
 streamlit-webrtc
 av
